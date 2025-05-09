@@ -25,8 +25,7 @@ const Location = () => {
           </div>
           <Button
             onClick={handleShareLocation}
-            className={locationShared ? "bg-red-500 hover:bg-red-600" : "bg-app-purple hover:bg-app-dark-blue"}
-            fullWidth
+            className={locationShared ? "bg-red-500 hover:bg-red-600 w-full" : "bg-app-purple hover:bg-app-dark-blue w-full"}
           >
             <MapPin className="h-5 w-5 mr-2" />
             {locationShared ? "Stop Sharing" : "Share My Location"}

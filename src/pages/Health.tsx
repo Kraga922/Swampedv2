@@ -1,122 +1,118 @@
 
 import Layout from "@/components/Layout";
+import { useApp } from "@/contexts/AppContext";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { healthInsight } from "@/data/mockData";
-import { useApp } from "@/contexts/AppContext";
-import { Beer } from "lucide-react";
+import { Beer, AlertTriangle } from "lucide-react";
 
 const Health = () => {
-  const { pastNights } = useApp();
+  const { user } = useApp();
   
-  const totalDrinks = pastNights.reduce(
-    (total, night) => total + night.drinks.filter(drink => drink.userId === "u1").length,
-    0
-  );
+  // This would typically come from the backend
+  const healthInsight = {
+    lifetimeDrinks: 347,
+    estimatedLifeImpact: 1.2, // years
+    weeklyAverage: 8.5,
+    monthlyTrend: 'decreasing' as const,
+    recommendations: [
+      'Consider taking a break from drinking for a week',
+      'Try alternating alcoholic drinks with water',
+      'Set a limit before going out and stick to it'
+    ]
+  };
   
-  const lifeImpact = healthInsight.estimatedLifeImpact;
-  const weeklyAverage = healthInsight.weeklyAverage;
+  // Calculate health score (0-100)
+  const healthScore = Math.max(0, 100 - (healthInsight.lifetimeDrinks / 20));
   
   return (
     <Layout title="Health Insights">
       <div className="space-y-6">
-        <Card className="border shadow-sm">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Beer className="h-5 w-5 mr-2" />
+              <Beer className="h-6 w-6 mr-2 text-app-purple" />
               Lifetime Impact
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-6">
-              <div className="text-5xl font-bold text-gradient mb-2">
-                {totalDrinks}
-              </div>
-              <p className="text-gray-500 mb-4">Total Lifetime Drinks</p>
+            <div className="text-center mb-6">
+              <span className="text-4xl font-bold text-app-purple">
+                {healthInsight.lifetimeDrinks}
+              </span>
+              <p className="text-gray-500">Total Drinks Consumed</p>
             </div>
             
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm font-medium">Estimated Life Impact</span>
-                  <span className="text-sm font-medium">
-                    {lifeImpact} {lifeImpact === 1 ? 'year' : 'years'}
-                  </span>
+                <div className="flex justify-between mb-2">
+                  <span className="text-sm font-medium">Health Impact</span>
+                  <span className="text-sm font-medium">{healthScore.toFixed(0)}%</span>
                 </div>
                 <Progress 
-                  value={lifeImpact * 20} 
-                  className="h-2" 
-                  indicatorColor={lifeImpact > 2 ? 'bg-red-500' : 'bg-orange-500'}
+                  value={healthScore} 
+                  className="h-2"
                 />
               </div>
               
               <div>
-                <div className="flex justify-between mb-1">
+                <div className="flex justify-between mb-2">
                   <span className="text-sm font-medium">Weekly Average</span>
-                  <span className="text-sm font-medium">{weeklyAverage} drinks</span>
+                  <span className="text-sm font-medium">{healthInsight.weeklyAverage} drinks</span>
                 </div>
                 <Progress 
-                  value={weeklyAverage * 10} 
-                  className="h-2" 
-                  indicatorColor={weeklyAverage > 7 ? 'bg-red-500' : 'bg-yellow-500'}
+                  value={(healthInsight.weeklyAverage / 14) * 100} 
+                  className="h-2"
                 />
+              </div>
+              
+              <div className="flex items-center justify-between p-3 bg-amber-50 rounded-lg border border-amber-100">
+                <div className="flex items-center">
+                  <AlertTriangle className="h-5 w-5 text-amber-500 mr-2" />
+                  <span className="text-sm font-medium">Estimated Life Impact</span>
+                </div>
+                <span className="text-sm font-medium">-{healthInsight.estimatedLifeImpact} years</span>
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="border shadow-sm">
+        <Card>
+          <CardHeader>
+            <CardTitle>Monthly Trend</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center mb-4">
+              <div className={`h-3 w-3 rounded-full mr-2 ${
+                healthInsight.monthlyTrend === 'decreasing' 
+                  ? 'bg-green-500' 
+                  : healthInsight.monthlyTrend === 'stable' 
+                    ? 'bg-amber-500'
+                    : 'bg-red-500'
+              }`}></div>
+              <p className="capitalize">{healthInsight.monthlyTrend}</p>
+            </div>
+            
+            <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">
+              <p className="text-gray-500">Detailed trend chart will appear here</p>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
           <CardHeader>
             <CardTitle>Recommendations</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-2">
               {healthInsight.recommendations.map((rec, index) => (
-                <li 
-                  key={index} 
-                  className="flex items-start gap-2 p-2 rounded-md bg-blue-50"
-                >
-                  <div className="h-5 w-5 rounded-full bg-app-blue text-white flex items-center justify-center text-xs flex-shrink-0">
+                <li key={index} className="flex items-start">
+                  <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-app-purple text-white text-xs mr-2">
                     {index + 1}
-                  </div>
+                  </span>
                   <p>{rec}</p>
                 </li>
               ))}
             </ul>
-            
-            <div className="mt-6 p-4 border rounded-md bg-gray-50">
-              <h3 className="font-medium mb-2">Monthly Trend</h3>
-              <div className="flex items-center gap-2">
-                <div className={`h-3 w-3 rounded-full ${
-                  healthInsight.monthlyTrend === 'decreasing' 
-                    ? 'bg-green-500' 
-                    : healthInsight.monthlyTrend === 'stable'
-                      ? 'bg-yellow-500'
-                      : 'bg-red-500'
-                }`}></div>
-                <span className="capitalize">{healthInsight.monthlyTrend}</span>
-              </div>
-              <p className="text-sm text-gray-500 mt-2">
-                Your drinking habits are {healthInsight.monthlyTrend} compared to last month.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="border shadow-sm">
-          <CardHeader>
-            <CardTitle>About Alcohol Health</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-700 mb-3">
-              Moderate drinking means up to 1 drink per day for women and up to 2 drinks per day for men.
-            </p>
-            <p className="text-gray-700 mb-3">
-              Heavy drinking is defined as consuming 8 or more drinks per week for women and 15 or more drinks per week for men.
-            </p>
-            <p className="text-gray-700">
-              These insights are estimates based on general health guidelines and your drinking patterns. For personalized advice, consult a healthcare professional.
-            </p>
           </CardContent>
         </Card>
       </div>
