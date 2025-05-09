@@ -62,19 +62,52 @@ const Layout = ({
     },
   ];
   
+  // Handle dropdown menu closing when clicking outside
+  const closeMenus = () => {
+    if (notificationsOpen) setNotificationsOpen(false);
+    if (profileMenuOpen) setProfileMenuOpen(false);
+  };
+  
   return (
-    <div className="min-h-screen flex flex-col bg-app-background">
+    <div className="min-h-screen flex flex-col bg-app-background" onClick={closeMenus}>
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-10 safe-area-top">
+      <header className="bg-white border-b sticky top-0 z-10 safe-area-top shadow-sm">
         <div className="container flex items-center justify-between h-16">
           <div className="flex items-center gap-2">
             {title ? (
               <h1 className="text-xl font-semibold">{title}</h1>
             ) : (
               <div className="flex items-center">
-                <h1 className="text-xl font-semibold text-gradient">Swamped</h1>
+                <h1 className="text-xl font-bold text-gradient">Swamped</h1>
               </div>
             )}
+          </div>
+          
+          {/* Quick Access Buttons */}
+          <div className="absolute left-1/2 transform -translate-x-1/2 flex gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="rounded-full bg-secondary hover:bg-secondary/80"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate('/location');
+              }}
+            >
+              <MapPin className="h-5 w-5 text-app-purple" />
+            </Button>
+            
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="rounded-full bg-secondary hover:bg-secondary/80"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate('/friends');
+              }}
+            >
+              <Users className="h-5 w-5 text-app-purple" />
+            </Button>
           </div>
           
           <div className="flex items-center gap-2">
@@ -82,7 +115,11 @@ const Layout = ({
               <Button 
                 variant="ghost" 
                 size="icon"
-                onClick={() => setNotificationsOpen(!notificationsOpen)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setNotificationsOpen(!notificationsOpen);
+                  if (profileMenuOpen) setProfileMenuOpen(false);
+                }}
               >
                 <Bell className="h-5 w-5" />
                 {unreadNotifications.length > 0 && (
@@ -93,7 +130,7 @@ const Layout = ({
               </Button>
               
               {notificationsOpen && (
-                <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg overflow-hidden z-20 border">
+                <div className="absolute right-0 mt-2 w-72 glass-card overflow-hidden z-20 shadow-lg" onClick={e => e.stopPropagation()}>
                   <div className="p-3 border-b">
                     <h3 className="font-medium">Notifications</h3>
                   </div>
@@ -102,7 +139,7 @@ const Layout = ({
                       userNotifications.map((notification) => (
                         <div 
                           key={notification.id} 
-                          className={`p-3 border-b ${notification.read ? 'bg-white' : 'bg-blue-50'}`}
+                          className={`p-3 border-b ${notification.read ? 'bg-white/50' : 'bg-app-purple/10'}`}
                           onClick={() => navigate(`/notifications/${notification.id}`)}
                         >
                           <h4 className="font-medium">{notification.title}</h4>
@@ -130,9 +167,13 @@ const Layout = ({
                 variant="ghost" 
                 size="icon" 
                 className="rounded-full"
-                onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setProfileMenuOpen(!profileMenuOpen);
+                  if (notificationsOpen) setNotificationsOpen(false);
+                }}
               >
-                <Avatar className="h-8 w-8">
+                <Avatar className="h-8 w-8 ring-2 ring-app-purple/20">
                   {user.avatar ? (
                     <AvatarImage src={user.avatar} alt={user.name} />
                   ) : (
@@ -144,10 +185,10 @@ const Layout = ({
               </Button>
               
               {profileMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg overflow-hidden z-20 border">
+                <div className="absolute right-0 mt-2 w-56 glass-card overflow-hidden z-20 shadow-lg" onClick={e => e.stopPropagation()}>
                   <div className="p-3 border-b">
                     <div className="flex items-center">
-                      <Avatar className="h-10 w-10">
+                      <Avatar className="h-10 w-10 ring-2 ring-app-purple/20">
                         {user.avatar ? (
                           <AvatarImage src={user.avatar} alt={user.name} />
                         ) : (
@@ -165,53 +206,53 @@ const Layout = ({
                   
                   <div className="py-1">
                     <button 
-                      className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-gray-100"
+                      className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-app-purple/10"
                       onClick={() => {
                         setProfileMenuOpen(false);
                         navigate("/profile");
                       }}
                     >
-                      <User className="h-4 w-4 mr-3" />
+                      <User className="h-4 w-4 mr-3 text-app-purple" />
                       Profile
                     </button>
                     
                     <button 
-                      className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-gray-100"
+                      className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-app-purple/10"
                       onClick={() => {
                         setProfileMenuOpen(false);
                         navigate("/friends");
                       }}
                     >
-                      <Users className="h-4 w-4 mr-3" />
+                      <Users className="h-4 w-4 mr-3 text-app-purple" />
                       Friends
                     </button>
                     
                     <button 
-                      className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-gray-100"
+                      className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-app-purple/10"
                       onClick={() => {
                         setProfileMenuOpen(false);
                         navigate("/gallery");
                       }}
                     >
-                      <Camera className="h-4 w-4 mr-3" />
+                      <Camera className="h-4 w-4 mr-3 text-app-purple" />
                       Gallery
                     </button>
                     
                     <button 
-                      className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-gray-100"
+                      className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-app-purple/10"
                       onClick={() => {
                         setProfileMenuOpen(false);
                         // Navigate to settings page
                       }}
                     >
-                      <Settings className="h-4 w-4 mr-3" />
+                      <Settings className="h-4 w-4 mr-3 text-app-purple" />
                       Settings
                     </button>
                     
                     <div className="border-t my-1"></div>
                     
                     <button 
-                      className="flex items-center w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-gray-100"
+                      className="flex items-center w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50"
                       onClick={() => {
                         setProfileMenuOpen(false);
                         navigate("/login");
@@ -231,13 +272,13 @@ const Layout = ({
       </header>
       
       {/* Main Content */}
-      <main className="flex-1 container py-4">
+      <main className="flex-1 container py-6">
         {children}
       </main>
       
       {/* Bottom Navigation */}
       {showNavigation && (
-        <nav className="sticky bottom-0 bg-white border-t z-10 safe-area-bottom">
+        <nav className="sticky bottom-0 bg-white border-t z-10 safe-area-bottom shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
           <div className="flex justify-around items-center">
             {navItems.map((item) => (
               <button

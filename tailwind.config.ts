@@ -64,15 +64,15 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				app: {
-					'blue': '#4361EE',
-					'purple': '#7209B7',
-					'red': '#F72585',
+					'blue': '#3A0CA3',
+					'purple': '#8B5CF6',
+					'red': '#D946EF',
 					'light-blue': '#4CC9F0',
-					'dark-blue': '#3A0CA3',
+					'dark-blue': '#1A1F2C',
 					'background': '#F8F9FA',
 					'card': '#FFFFFF',
-					'text': '#1A1A2E',
-					'light-text': '#4A4A68',
+					'text': '#1A1F2C',
+					'light-text': '#8E9196',
 				}
 			},
 			borderRadius: {
