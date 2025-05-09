@@ -33,37 +33,37 @@
     --input: 220 15% 92%;
     --ring: 255 85% 60%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
 
   .dark {
-    --background: 225 25% 12%;
+    --background: 225 25% 10%;
     --foreground: 220 25% 98%;
 
-    --card: 225 25% 15%;
+    --card: 225 25% 13%;
     --card-foreground: 220 25% 98%;
 
-    --popover: 225 25% 15%;
+    --popover: 225 25% 13%;
     --popover-foreground: 220 25% 98%;
 
-    --primary: 255 85% 60%;
+    --primary: 255 85% 70%;
     --primary-foreground: 220 25% 98%;
 
-    --secondary: 225 20% 20%;
+    --secondary: 225 20% 18%;
     --secondary-foreground: 220 25% 98%;
 
-    --muted: 225 20% 20%;
+    --muted: 225 20% 18%;
     --muted-foreground: 220 15% 70%;
 
-    --accent: 255 85% 60%;
+    --accent: 255 85% 70%;
     --accent-foreground: 220 25% 98%;
 
-    --destructive: 350 90% 40%;
+    --destructive: 350 90% 50%;
     --destructive-foreground: 220 25% 98%;
 
-    --border: 225 20% 20%;
-    --input: 225 20% 20%;
-    --ring: 255 85% 60%;
+    --border: 225 20% 18%;
+    --input: 225 20% 18%;
+    --ring: 255 85% 70%;
   }
 }
 
@@ -73,8 +73,25 @@
   }
 
   body {
-    @apply bg-app-background text-app-text font-sans;
+    @apply bg-background text-foreground font-sans;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  .dark .recharts-tooltip-cursor {
+    @apply fill-gray-800;
+  }
+
+  .dark .recharts-default-tooltip {
+    @apply bg-gray-900 border-gray-700 text-gray-100;
+  }
+
+  .dark .recharts-cartesian-grid-horizontal line,
+  .dark .recharts-cartesian-grid-vertical line {
+    @apply stroke-gray-700;
+  }
+
+  .dark .recharts-text {
+    @apply fill-gray-400;
   }
 }
 
@@ -88,7 +105,7 @@
   }
 
   .glass-card {
-    @apply bg-white/70 backdrop-blur-lg shadow-lg border border-white/20 rounded-xl;
+    @apply bg-white/70 backdrop-blur-lg shadow-lg border border-white/20 rounded-xl dark:bg-black/40 dark:border-white/10;
   }
 
   .safe-area-top {
@@ -97,6 +114,16 @@
   
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom, 16px);
+  }
+
+  .neomorphic {
+    box-shadow: 10px 10px 30px rgba(0, 0, 0, 0.1), 
+               -10px -10px 30px rgba(255, 255, 255, 0.8);
+  }
+
+  .dark .neomorphic {
+    box-shadow: 10px 10px 30px rgba(0, 0, 0, 0.3), 
+               -10px -10px 30px rgba(255, 255, 255, 0.05);
   }
 }
 

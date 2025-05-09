@@ -1,11 +1,12 @@
 
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Bell, User, Calendar, Clock, Beer, MapPin, Camera, Settings, Users, LogIn } from "lucide-react";
+import { Bell, User, Calendar, Clock, Beer, MapPin, Camera, Settings, Users, LogIn, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useApp } from "@/contexts/AppContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useToast } from "@/components/ui/use-toast";
 
 interface LayoutProps {
   children: ReactNode;
@@ -25,6 +26,11 @@ const Layout = ({
   const location = useLocation();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(
+    localStorage.getItem('darkMode') === 'true' || 
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+  );
+  const { toast } = useToast();
   
   const unreadNotifications = userNotifications.filter((notif) => !notif.read);
   
@@ -62,22 +68,46 @@ const Layout = ({
     },
   ];
   
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('darkMode', String(darkMode));
+  }, [darkMode]);
+  
   // Handle dropdown menu closing when clicking outside
   const closeMenus = () => {
     if (notificationsOpen) setNotificationsOpen(false);
     if (profileMenuOpen) setProfileMenuOpen(false);
   };
+
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+    toast({
+      title: !darkMode ? "Dark mode enabled" : "Light mode enabled",
+      description: !darkMode ? "Welcome to the night side." : "Brightness restored.",
+    });
+  };
   
   return (
-    <div className="min-h-screen flex flex-col bg-app-background" onClick={closeMenus}>
+    <div className="min-h-screen flex flex-col bg-background" onClick={closeMenus}>
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-10 safe-area-top shadow-sm">
+      <header className="bg-card border-b sticky top-0 z-10 safe-area-top shadow-sm">
         <div className="container flex items-center justify-between h-16">
           <div className="flex items-center gap-2">
             {title ? (
               <h1 className="text-xl font-semibold">{title}</h1>
             ) : (
-              <div className="flex items-center">
+              <div className="flex items-center gap-2" onClick={() => navigate('/')}>
+                <div className="relative w-8 h-8 animate-float">
+                  <img 
+                    src="/lovable-uploads/0c5b2aa8-9866-4ca4-a90f-8775e517fd3f.png" 
+                    alt="Swamped Logo" 
+                    className="w-full h-full object-contain"
+                  />
+                </div>
                 <h1 className="text-xl font-bold text-gradient">Swamped</h1>
               </div>
             )}
@@ -111,6 +141,19 @@ const Layout = ({
           </div>
           
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              onClick={toggleDarkMode}
+            >
+              {darkMode ? (
+                <Sun className="h-5 w-5 text-amber-300" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </Button>
+            
             <div className="relative">
               <Button 
                 variant="ghost" 
@@ -139,12 +182,12 @@ const Layout = ({
                       userNotifications.map((notification) => (
                         <div 
                           key={notification.id} 
-                          className={`p-3 border-b ${notification.read ? 'bg-white/50' : 'bg-app-purple/10'}`}
+                          className={`p-3 border-b ${notification.read ? 'bg-card/50' : 'bg-app-purple/10 dark:bg-app-purple/20'}`}
                           onClick={() => navigate(`/notifications/${notification.id}`)}
                         >
                           <h4 className="font-medium">{notification.title}</h4>
-                          <p className="text-sm text-gray-600">{notification.message}</p>
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-sm text-muted-foreground">{notification.message}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
                             {new Date(notification.timestamp).toLocaleTimeString([], { 
                               hour: '2-digit', 
                               minute: '2-digit' 
@@ -153,7 +196,7 @@ const Layout = ({
                         </div>
                       ))
                     ) : (
-                      <div className="p-4 text-center text-gray-500">
+                      <div className="p-4 text-center text-muted-foreground">
                         No notifications
                       </div>
                     )}
@@ -199,7 +242,7 @@ const Layout = ({
                       </Avatar>
                       <div className="ml-3">
                         <h3 className="font-medium">{user.name}</h3>
-                        <p className="text-xs text-gray-500">@{user.username}</p>
+                        <p className="text-xs text-muted-foreground">@{user.username}</p>
                       </div>
                     </div>
                   </div>
@@ -252,7 +295,7 @@ const Layout = ({
                     <div className="border-t my-1"></div>
                     
                     <button 
-                      className="flex items-center w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50"
+                      className="flex items-center w-full px-4 py-2 text-sm text-left text-destructive hover:bg-destructive/10"
                       onClick={() => {
                         setProfileMenuOpen(false);
                         navigate("/login");
@@ -278,7 +321,7 @@ const Layout = ({
       
       {/* Bottom Navigation */}
       {showNavigation && (
-        <nav className="sticky bottom-0 bg-white border-t z-10 safe-area-bottom shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+        <nav className="sticky bottom-0 bg-card border-t z-10 safe-area-bottom shadow-[0_-2px_10px_rgba(0,0,0,0.05)] dark:shadow-[0_-2px_10px_rgba(0,0,0,0.2)]">
           <div className="flex justify-around items-center">
             {navItems.map((item) => (
               <button
@@ -287,8 +330,8 @@ const Layout = ({
                   item.active 
                     ? "text-app-purple" 
                     : item.disabled
-                      ? "text-gray-300 pointer-events-none"
-                      : "text-gray-500"
+                      ? "text-muted-foreground/30 pointer-events-none"
+                      : "text-muted-foreground"
                 }`}
                 onClick={() => navigate(item.path)}
                 disabled={item.disabled}
