@@ -6,26 +6,67 @@ import { useApp } from "@/contexts/AppContext";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, User, UserPlus } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
 
 const Groups = () => {
-  const { userGroups, createGroup } = useApp();
+  const { userGroups, createGroup, user } = useApp();
   const [isAddingGroup, setIsAddingGroup] = useState(false);
   const [groupName, setGroupName] = useState("");
+  const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
+  const [showFriendSelector, setShowFriendSelector] = useState(false);
+  const { toast } = useToast();
+  
+  // Mock friends data (in a real app, this would come from the context)
+  const [availableFriends, setAvailableFriends] = useState([
+    { id: "f1", name: "Alex Johnson", username: "alexj", avatar: null },
+    { id: "f2", name: "Sarah Williams", username: "sarahw", avatar: null },
+    { id: "f3", name: "Mike Chen", username: "mikec", avatar: null },
+    { id: "f4", name: "Taylor Lee", username: "taylorl", avatar: null },
+  ]);
   
   const handleCreateGroup = () => {
     if (!groupName) return;
     
-    createGroup(groupName, [{ 
-      id: "u1", 
-      name: "Alex Johnson", 
-      username: "alex_j",
-      avatar: "/avatar.png",
-      isAdmin: true,
-      isDesignatedDriver: false, 
-    }]);
+    const members = [
+      { 
+        id: user.id, 
+        name: user.name, 
+        username: user.username,
+        avatar: user.avatar,
+        isAdmin: true,
+        isDesignatedDriver: false, 
+      },
+      ...availableFriends.filter(friend => selectedFriends.includes(friend.id)).map(friend => ({
+        id: friend.id,
+        name: friend.name,
+        username: friend.username,
+        avatar: friend.avatar,
+        isAdmin: false,
+        isDesignatedDriver: false,
+      }))
+    ];
+    
+    createGroup(groupName, members);
+    
+    toast({
+      title: "Group created",
+      description: `"${groupName}" has been created with ${members.length} members.`
+    });
     
     setIsAddingGroup(false);
     setGroupName("");
+    setSelectedFriends([]);
+  };
+  
+  const handleToggleFriend = (friendId: string) => {
+    setSelectedFriends(prev => 
+      prev.includes(friendId)
+        ? prev.filter(id => id !== friendId)
+        : [...prev, friendId]
+    );
   };
   
   return (
@@ -72,9 +113,8 @@ const Groups = () => {
           <div className="space-y-4 py-4">
             <div>
               <label className="block text-sm font-medium mb-1">Group Name</label>
-              <input
+              <Input
                 type="text"
-                className="w-full p-2 border rounded"
                 placeholder="e.g., Weekend Crew"
                 value={groupName}
                 onChange={(e) => setGroupName(e.target.value)}
@@ -84,27 +124,94 @@ const Groups = () => {
             <div>
               <label className="block text-sm font-medium mb-1">Members</label>
               <div className="bg-gray-50 border rounded p-3">
+                {/* Current user (always in group) */}
                 <div className="flex items-center">
                   <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                    <User className="h-4 w-4" />
+                    {user.avatar ? (
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={user.avatar} alt={user.name} />
+                        <AvatarFallback>{user.name[0]}</AvatarFallback>
+                      </Avatar>
+                    ) : (
+                      <User className="h-4 w-4" />
+                    )}
                   </div>
                   <div className="ml-2">
-                    <p className="text-sm font-medium">Alex Johnson (You)</p>
+                    <p className="text-sm font-medium">{user.name} (You)</p>
                     <p className="text-xs text-gray-500">Group Admin</p>
                   </div>
                 </div>
+                
+                {/* Selected friends */}
+                {selectedFriends.length > 0 && (
+                  <div className="mt-2">
+                    {selectedFriends.map(friendId => {
+                      const friend = availableFriends.find(f => f.id === friendId);
+                      if (!friend) return null;
+                      
+                      return (
+                        <div key={friend.id} className="flex items-center mt-2 pl-2 py-1 border-t">
+                          <Avatar className="h-7 w-7">
+                            {friend.avatar ? (
+                              <AvatarImage src={friend.avatar} alt={friend.name} />
+                            ) : (
+                              <AvatarFallback>{friend.name[0]}</AvatarFallback>
+                            )}
+                          </Avatar>
+                          <div className="ml-2">
+                            <p className="text-sm">{friend.name}</p>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="ml-auto h-6 text-red-500"
+                            onClick={() => handleToggleFriend(friend.id)}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                
                 <div className="mt-3 pt-3 border-t">
                   <Button 
                     variant="outline" 
                     className="w-full justify-center"
-                    disabled
+                    onClick={() => setShowFriendSelector(!showFriendSelector)}
                   >
                     <UserPlus className="h-4 w-4 mr-2" />
-                    <span>Invite Members</span>
+                    <span>{showFriendSelector ? "Hide Friends" : "Add Friends"}</span>
                   </Button>
-                  <p className="text-xs text-gray-500 mt-2 text-center">
-                    You can add friends after creating the group
-                  </p>
+                  
+                  {showFriendSelector && (
+                    <div className="mt-2 border rounded max-h-40 overflow-y-auto">
+                      {availableFriends.filter(f => !selectedFriends.includes(f.id)).length > 0 ? (
+                        availableFriends.filter(f => !selectedFriends.includes(f.id)).map(friend => (
+                          <div key={friend.id} className="flex items-center p-2 hover:bg-gray-50 border-b last:border-b-0">
+                            <Checkbox 
+                              id={`friend-${friend.id}`} 
+                              checked={selectedFriends.includes(friend.id)}
+                              onCheckedChange={() => handleToggleFriend(friend.id)}
+                            />
+                            <Avatar className="h-7 w-7 ml-2">
+                              {friend.avatar ? (
+                                <AvatarImage src={friend.avatar} alt={friend.name} />
+                              ) : (
+                                <AvatarFallback>{friend.name[0]}</AvatarFallback>
+                              )}
+                            </Avatar>
+                            <label htmlFor={`friend-${friend.id}`} className="ml-2 text-sm cursor-pointer flex-1">
+                              {friend.name}
+                            </label>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-center py-2 text-sm text-gray-500">All friends added</p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

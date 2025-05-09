@@ -72,7 +72,7 @@ const Layout = ({
               <h1 className="text-xl font-semibold">{title}</h1>
             ) : (
               <div className="flex items-center">
-                <h1 className="text-xl font-semibold text-gradient">SafeNight</h1>
+                <h1 className="text-xl font-semibold text-gradient">Swamped</h1>
               </div>
             )}
           </div>
