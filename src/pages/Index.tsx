@@ -1,13 +1,48 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import Layout from "@/components/Layout";
+import NightSummary from "@/components/NightSummary";
+import { useApp } from "@/contexts/AppContext";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { Plus } from "lucide-react";
 
 const Index = () => {
+  const { pastNights } = useApp();
+  const navigate = useNavigate();
+  
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <Layout
+      title="Past Nights"
+      rightAction={
+        <Button 
+          onClick={() => navigate("/groups")}
+          className="bg-app-purple hover:bg-app-dark-blue"
+        >
+          <Plus className="h-5 w-5 mr-2" />
+          New Night
+        </Button>
+      }
+    >
+      <div className="space-y-4">
+        {pastNights.length > 0 ? (
+          pastNights.map((night) => (
+            <NightSummary key={night.id} night={night} />
+          ))
+        ) : (
+          <div className="text-center py-12">
+            <h3 className="text-xl font-medium mb-2">No past nights yet</h3>
+            <p className="text-gray-500 mb-6">Start tracking your nights out with friends</p>
+            <Button 
+              onClick={() => navigate("/groups")}
+              className="bg-app-purple hover:bg-app-dark-blue"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              Start a Night
+            </Button>
+          </div>
+        )}
       </div>
-    </div>
+    </Layout>
   );
 };
 
