@@ -1,142 +1,89 @@
 
 import { useState } from "react";
-import { useApp } from "@/contexts/AppContext";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Beer, Plus } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useApp } from "@/contexts/AppContext";
+import { Plus } from "lucide-react";
 
-const AddDrinkForm = () => {
-  const { user, activeNight, allDrinkTypes, addDrink } = useApp();
+interface AddDrinkFormProps {
+  userId?: string;
+}
+
+const AddDrinkForm = ({ userId }: AddDrinkFormProps) => {
+  const { user, allDrinkTypes, addDrink } = useApp();
   const [open, setOpen] = useState(false);
-  const [selectedTypeId, setSelectedTypeId] = useState("");
-  const { toast } = useToast();
+  const [selectedDrinkType, setSelectedDrinkType] = useState("");
+  const [location, setLocation] = useState("");
   
-  const handleAddDrink = async () => {
-    if (!selectedTypeId || !activeNight) return;
+  const handleAddDrink = () => {
+    if (!selectedDrinkType) return;
     
-    try {
-      // Get user's current location
-      let locationData = null;
-      
-      try {
-        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true,
-            timeout: 5000,
-            maximumAge: 0
-          });
-        });
-        
-        const { latitude, longitude } = position.coords;
-        
-        // In a real app, you would use a reverse geocoding service to get the location name
-        // For now, we'll just use a placeholder
-        locationData = {
-          name: "Current Location",
-          lat: latitude,
-          lng: longitude,
-        };
-      } catch (error) {
-        console.error("Error getting location:", error);
-        // Continue without location data
-      }
-      
-      const newDrink = {
-        userId: user.id,
-        typeId: selectedTypeId,
-        timestamp: new Date().toISOString(),
-        location: locationData,
-      };
-      
-      addDrink(newDrink);
-      setSelectedTypeId("");
-      setOpen(false);
-      
-      toast({
-        title: "Drink added",
-        description: "Your drink has been logged successfully.",
-      });
-    } catch (error) {
-      console.error("Error adding drink:", error);
-      toast({
-        title: "Error adding drink",
-        description: "There was a problem logging your drink.",
-        variant: "destructive",
-      });
-    }
+    addDrink({
+      userId: userId || user.id,
+      typeId: selectedDrinkType,
+      timestamp: new Date().toISOString(),
+      location: location ? { name: location } : undefined,
+    });
+    
+    setOpen(false);
+    setSelectedDrinkType("");
+    setLocation("");
   };
-  
-  if (!activeNight) return null;
   
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="rounded-full h-10 w-10 p-0 bg-app-purple hover:bg-app-blue">
-          <Plus className="h-5 w-5" />
+        <Button className="bg-app-purple hover:bg-app-dark-blue">
+          <Plus className="h-5 w-5 mr-2" />
+          Add Drink
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add a Drink</DialogTitle>
+          <DialogTitle>Add a New Drink</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <label htmlFor="drinkType" className="text-sm font-medium">
-              Drink Type
-            </label>
-            <Select
-              value={selectedTypeId}
-              onValueChange={setSelectedTypeId}
-            >
-              <SelectTrigger id="drinkType">
-                <SelectValue placeholder="Select a drink type" />
-              </SelectTrigger>
-              <SelectContent>
-                {allDrinkTypes.map((type) => (
-                  <SelectItem key={type.id} value={type.id}>
-                    <div className="flex items-center">
-                      <span className="mr-2">{type.icon}</span>
-                      <span>{type.name}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <div className="grid gap-4 py-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Select Drink Type</label>
+            <div className="grid grid-cols-3 gap-2">
+              {allDrinkTypes.map((type) => (
+                <button
+                  key={type.id}
+                  className={`p-3 flex flex-col items-center justify-center rounded-lg border transition-colors ${
+                    selectedDrinkType === type.id
+                      ? "border-app-purple bg-purple-50"
+                      : "border-gray-200"
+                  }`}
+                  onClick={() => setSelectedDrinkType(type.id)}
+                >
+                  <span className="text-3xl mb-1">{type.icon}</span>
+                  <span className="text-sm">{type.name}</span>
+                </button>
+              ))}
+            </div>
           </div>
           
-          <div className="text-sm text-muted-foreground">
-            <p className="flex items-center">
-              <MapPin className="h-4 w-4 mr-1" />
-              Location will be automatically logged
-            </p>
+          <div>
+            <label className="block text-sm font-medium mb-1">Location (optional)</label>
+            <input
+              type="text"
+              placeholder="Enter location"
+              className="w-full p-2 border rounded"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+            />
           </div>
-        </div>
-        <DialogFooter>
-          <Button
-            onClick={handleAddDrink}
-            disabled={!selectedTypeId}
-            className="w-full bg-app-purple hover:bg-app-blue"
+          
+          <Button 
+            onClick={handleAddDrink} 
+            disabled={!selectedDrinkType}
+            className="bg-app-purple hover:bg-app-dark-blue"
           >
-            <Beer className="mr-2 h-4 w-4" />
             Add Drink
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
