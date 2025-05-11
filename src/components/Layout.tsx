@@ -1,11 +1,12 @@
 
 import { ReactNode, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Bell, User, Calendar, Clock, Beer, MapPin, Camera, Settings, Users, LogIn } from "lucide-react";
+import { Bell, User, Calendar, Clock, Beer, MapPin, Camera, Settings, Users, LogIn, Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useApp } from "@/contexts/AppContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface LayoutProps {
   children: ReactNode;
@@ -43,16 +44,16 @@ const Layout = ({
       disabled: !activeNight,
     },
     {
-      name: "Groups",
-      icon: <Users className="h-6 w-6" />,
-      path: "/groups",
-      active: location.pathname === "/groups",
+      name: "Map",
+      icon: <Map className="h-6 w-6" />,
+      path: "/location",
+      active: location.pathname === "/location",
     },
     {
-      name: "Venues",
-      icon: <MapPin className="h-6 w-6" />,
-      path: "/venues",
-      active: location.pathname === "/venues",
+      name: "Friends",
+      icon: <Users className="h-6 w-6" />,
+      path: "/friends",
+      active: location.pathname === "/friends",
     },
     {
       name: "Health",
@@ -63,26 +64,29 @@ const Layout = ({
   ];
   
   return (
-    <div className="min-h-screen flex flex-col bg-app-background">
+    <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-10 safe-area-top">
+      <header className="bg-card border-b sticky top-0 z-10 safe-area-top shadow-sm">
         <div className="container flex items-center justify-between h-16">
           <div className="flex items-center gap-2">
             {title ? (
-              <h1 className="text-xl font-semibold">{title}</h1>
+              <h1 className="text-xl font-bold">{title}</h1>
             ) : (
               <div className="flex items-center">
-                <h1 className="text-xl font-semibold text-gradient">Swamped</h1>
+                <h1 className="text-xl font-bold text-gradient">Swamped</h1>
               </div>
             )}
           </div>
           
           <div className="flex items-center gap-2">
+            <ThemeToggle />
+
             <div className="relative">
               <Button 
                 variant="ghost" 
                 size="icon"
                 onClick={() => setNotificationsOpen(!notificationsOpen)}
+                className="rounded-full"
               >
                 <Bell className="h-5 w-5" />
                 {unreadNotifications.length > 0 && (
@@ -93,7 +97,7 @@ const Layout = ({
               </Button>
               
               {notificationsOpen && (
-                <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg overflow-hidden z-20 border">
+                <div className="absolute right-0 mt-2 w-72 bg-card rounded-lg shadow-lg overflow-hidden z-20 border animate-in fade-in slide-in">
                   <div className="p-3 border-b">
                     <h3 className="font-medium">Notifications</h3>
                   </div>
@@ -102,12 +106,12 @@ const Layout = ({
                       userNotifications.map((notification) => (
                         <div 
                           key={notification.id} 
-                          className={`p-3 border-b ${notification.read ? 'bg-white' : 'bg-blue-50'}`}
+                          className={`p-3 border-b ${notification.read ? 'bg-card' : 'bg-accent/30'}`}
                           onClick={() => navigate(`/notifications/${notification.id}`)}
                         >
                           <h4 className="font-medium">{notification.title}</h4>
-                          <p className="text-sm text-gray-600">{notification.message}</p>
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-sm text-muted-foreground">{notification.message}</p>
+                          <p className="text-xs text-muted-foreground/80 mt-1">
                             {new Date(notification.timestamp).toLocaleTimeString([], { 
                               hour: '2-digit', 
                               minute: '2-digit' 
@@ -116,7 +120,7 @@ const Layout = ({
                         </div>
                       ))
                     ) : (
-                      <div className="p-4 text-center text-gray-500">
+                      <div className="p-4 text-center text-muted-foreground">
                         No notifications
                       </div>
                     )}
@@ -136,7 +140,7 @@ const Layout = ({
                   {user.avatar ? (
                     <AvatarImage src={user.avatar} alt={user.name} />
                   ) : (
-                    <AvatarFallback className="bg-app-purple text-white text-sm">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-sm">
                       {user.name.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   )}
@@ -144,28 +148,28 @@ const Layout = ({
               </Button>
               
               {profileMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg overflow-hidden z-20 border">
+                <div className="absolute right-0 mt-2 w-56 bg-card rounded-lg shadow-lg overflow-hidden z-20 border animate-in fade-in slide-in">
                   <div className="p-3 border-b">
                     <div className="flex items-center">
                       <Avatar className="h-10 w-10">
                         {user.avatar ? (
                           <AvatarImage src={user.avatar} alt={user.name} />
                         ) : (
-                          <AvatarFallback className="bg-app-purple text-white">
+                          <AvatarFallback className="bg-primary text-primary-foreground">
                             {user.name.charAt(0).toUpperCase()}
                           </AvatarFallback>
                         )}
                       </Avatar>
                       <div className="ml-3">
                         <h3 className="font-medium">{user.name}</h3>
-                        <p className="text-xs text-gray-500">@{user.username}</p>
+                        <p className="text-xs text-muted-foreground">@{user.username}</p>
                       </div>
                     </div>
                   </div>
                   
                   <div className="py-1">
                     <button 
-                      className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-gray-100"
+                      className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-accent"
                       onClick={() => {
                         setProfileMenuOpen(false);
                         navigate("/profile");
@@ -176,7 +180,7 @@ const Layout = ({
                     </button>
                     
                     <button 
-                      className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-gray-100"
+                      className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-accent"
                       onClick={() => {
                         setProfileMenuOpen(false);
                         navigate("/friends");
@@ -187,7 +191,7 @@ const Layout = ({
                     </button>
                     
                     <button 
-                      className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-gray-100"
+                      className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-accent"
                       onClick={() => {
                         setProfileMenuOpen(false);
                         navigate("/gallery");
@@ -198,10 +202,10 @@ const Layout = ({
                     </button>
                     
                     <button 
-                      className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-gray-100"
+                      className="flex items-center w-full px-4 py-2 text-sm text-left hover:bg-accent"
                       onClick={() => {
                         setProfileMenuOpen(false);
-                        // Navigate to settings page
+                        navigate("/settings");
                       }}
                     >
                       <Settings className="h-4 w-4 mr-3" />
@@ -211,7 +215,7 @@ const Layout = ({
                     <div className="border-t my-1"></div>
                     
                     <button 
-                      className="flex items-center w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-gray-100"
+                      className="flex items-center w-full px-4 py-2 text-sm text-left text-destructive hover:bg-accent"
                       onClick={() => {
                         setProfileMenuOpen(false);
                         navigate("/login");
@@ -237,23 +241,23 @@ const Layout = ({
       
       {/* Bottom Navigation */}
       {showNavigation && (
-        <nav className="sticky bottom-0 bg-white border-t z-10 safe-area-bottom">
+        <nav className="sticky bottom-0 bg-card border-t z-10 safe-area-bottom shadow-[0_-1px_2px_rgba(0,0,0,0.05)]">
           <div className="flex justify-around items-center">
             {navItems.map((item) => (
               <button
                 key={item.name}
                 className={`flex flex-col items-center justify-center py-2 px-4 ${
                   item.active 
-                    ? "text-app-purple" 
+                    ? "text-primary" 
                     : item.disabled
-                      ? "text-gray-300 pointer-events-none"
-                      : "text-gray-500"
+                      ? "text-muted-foreground/30 pointer-events-none"
+                      : "text-muted-foreground"
                 }`}
                 onClick={() => navigate(item.path)}
                 disabled={item.disabled}
               >
                 {item.icon}
-                <span className="text-xs mt-1">{item.name}</span>
+                <span className="text-xs mt-1 font-medium">{item.name}</span>
               </button>
             ))}
           </div>

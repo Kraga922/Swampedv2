@@ -16,7 +16,7 @@ const Index = () => {
       rightAction={
         <Button 
           onClick={() => navigate("/groups")}
-          className="bg-app-purple hover:bg-app-dark-blue"
+          className="bg-primary hover:bg-primary/90"
         >
           <Plus className="h-5 w-5 mr-2" />
           New Night
@@ -31,10 +31,10 @@ const Index = () => {
         ) : (
           <div className="text-center py-12">
             <h3 className="text-xl font-medium mb-2">No past nights yet</h3>
-            <p className="text-gray-500 mb-6">Start tracking your nights out with friends</p>
+            <p className="text-muted-foreground mb-6">Start tracking your nights out with friends</p>
             <Button 
               onClick={() => navigate("/groups")}
-              className="bg-app-purple hover:bg-app-dark-blue"
+              className="bg-primary hover:bg-primary/90"
             >
               <Plus className="h-5 w-5 mr-2" />
               Start a Night

@@ -58,7 +58,7 @@
     --accent: 262 83% 58%;
     --accent-foreground: 210 20% 98%;
 
-    --destructive: 0 62% 30%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 210 20% 98%;
 
     --border: 215 27% 16%;
@@ -77,8 +77,15 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans dark:bg-gradient-to-br dark:from-gray-900 dark:to-gray-800;
-    -webkit-tap-highlight-color: transparent;
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  
+  .dark body {
+    @apply bg-gradient-to-br from-gray-900 to-gray-800;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-medium tracking-tight;
   }
 }
 
@@ -101,6 +108,38 @@
 
   .glass-card {
     @apply bg-white/80 dark:bg-gray-800/50 backdrop-blur-md;
+  }
+  
+  .animate-in {
+    animation: animate-in 0.3s ease-out forwards;
+  }
+  
+  .fade-in {
+    opacity: 0;
+    animation: fade-in 0.3s ease-out forwards;
+  }
+  
+  .slide-in {
+    transform: translateY(10px);
+    animation: slide-in 0.2s ease-out forwards;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateY(10px);
+  }
+  to {
+    transform: translateY(0);
   }
 }
 
