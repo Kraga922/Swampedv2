@@ -1,1 +1,5 @@
+
 project_id = "dscmdqzgnarxgdtbtuvm"
+
+[functions.location-lookup]
+verify_jwt = true

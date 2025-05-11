@@ -1,25 +1,35 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Lock, LogIn } from "lucide-react";
+import { User, Lock, LogIn, Mail } from "lucide-react";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { session, isLoading, signIn, signUp } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   
-  const handleSubmit = (e: React.FormEvent) => {
+  // If user is already logged in, redirect to home
+  if (session.user) {
+    return <Navigate to="/" replace />;
+  }
+  
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, you would call the login/sign up API
-    // For now, just navigate to home page
-    navigate("/");
+    
+    if (isLogin) {
+      await signIn(email, password);
+    } else {
+      await signUp(email, password, name);
+    }
   };
   
   return (
@@ -37,46 +47,33 @@ const Login = () => {
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
               {!isLogin && (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-                      <Input 
-                        id="name" 
-                        placeholder="Your full name" 
-                        className="pl-10"
-                        value={name}
-                        onChange={e => setName(e.target.value)}
-                        required={!isLogin}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                     <Input 
-                      id="email" 
-                      type="email" 
-                      placeholder="your.email@example.com" 
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
+                      id="name" 
+                      placeholder="Your full name" 
+                      className="pl-10"
+                      value={name}
+                      onChange={e => setName(e.target.value)}
                       required={!isLogin}
                     />
                   </div>
-                </>
+                </div>
               )}
               
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="email">Email</Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                   <Input 
-                    id="username" 
-                    placeholder="Username" 
+                    id="email" 
+                    type="email" 
+                    placeholder="your.email@example.com" 
                     className="pl-10"
-                    value={username}
-                    onChange={e => setUsername(e.target.value)}
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
                     required
                   />
                 </div>
@@ -110,6 +107,7 @@ const Login = () => {
               <Button 
                 type="submit" 
                 className="w-full bg-app-purple hover:bg-app-dark-blue"
+                disabled={isLoading}
               >
                 <LogIn className="h-4 w-4 mr-2" />
                 {isLogin ? "Login" : "Create Account"}

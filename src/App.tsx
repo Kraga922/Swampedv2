@@ -5,6 +5,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AppProvider } from "./contexts/AppContext";
+import { AuthProvider } from "./contexts/AuthContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
+import { useAuth } from "./contexts/AuthContext";
 
 import Index from "./pages/Index";
 import CurrentNight from "./pages/CurrentNight";
@@ -33,9 +36,18 @@ const queryClient = new QueryClient({
 
 // Auth protection helper component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const isAuthenticated = true; // In a real app, check if user is authenticated
+  const { session, isLoading } = useAuth();
   
-  if (!isAuthenticated) {
+  // Show loading state while checking auth
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    );
+  }
+  
+  if (!session.user) {
     return <Navigate to="/login" replace />;
   }
   
@@ -47,27 +59,31 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <AppProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            
-            {/* Protected routes */}
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-            <Route path="/current" element={<ProtectedRoute><CurrentNight /></ProtectedRoute>} />
-            <Route path="/groups" element={<ProtectedRoute><Groups /></ProtectedRoute>} />
-            <Route path="/location" element={<ProtectedRoute><Location /></ProtectedRoute>} />
-            <Route path="/health" element={<ProtectedRoute><Health /></ProtectedRoute>} />
-            <Route path="/night/:nightId" element={<ProtectedRoute><NightDetails /></ProtectedRoute>} />
-            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-            <Route path="/friends" element={<ProtectedRoute><Friends /></ProtectedRoute>} />
-            <Route path="/venues" element={<ProtectedRoute><Venues /></ProtectedRoute>} />
-            <Route path="/gallery" element={<ProtectedRoute><Gallery /></ProtectedRoute>} />
-            <Route path="/night/:nightId/gallery" element={<ProtectedRoute><Gallery /></ProtectedRoute>} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </AppProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                
+                {/* Protected routes */}
+                <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+                <Route path="/current" element={<ProtectedRoute><CurrentNight /></ProtectedRoute>} />
+                <Route path="/groups" element={<ProtectedRoute><Groups /></ProtectedRoute>} />
+                <Route path="/location" element={<ProtectedRoute><Location /></ProtectedRoute>} />
+                <Route path="/health" element={<ProtectedRoute><Health /></ProtectedRoute>} />
+                <Route path="/night/:nightId" element={<ProtectedRoute><NightDetails /></ProtectedRoute>} />
+                <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                <Route path="/friends" element={<ProtectedRoute><Friends /></ProtectedRoute>} />
+                <Route path="/venues" element={<ProtectedRoute><Venues /></ProtectedRoute>} />
+                <Route path="/gallery" element={<ProtectedRoute><Gallery /></ProtectedRoute>} />
+                <Route path="/night/:nightId/gallery" element={<ProtectedRoute><Gallery /></ProtectedRoute>} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </AppProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

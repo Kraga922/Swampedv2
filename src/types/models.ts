@@ -50,6 +50,8 @@ export interface Night {
   drinks: Drink[];
   isActive: boolean;
   settings?: NightSettings;
+  mainLocation?: string;
+  name?: string;
 }
 
 export interface NightSettings {
@@ -77,4 +79,14 @@ export interface HealthInsight {
   weeklyAverage: number;
   monthlyTrend: 'increasing' | 'decreasing' | 'stable';
   recommendations: string[];
+}
+
+export interface BACReading {
+  timestamp: string;
+  value: number;
+}
+
+export interface UserSession {
+  user: User | null;
+  session: any | null;
 }
