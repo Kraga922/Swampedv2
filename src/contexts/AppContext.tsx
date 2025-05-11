@@ -11,6 +11,8 @@ interface AppContextProps {
   userGroups: Group[];
   userNotifications: Notification[];
   allDrinkTypes: DrinkType[];
+  drinks: Drink[]; // Added to expose all drinks
+  drinkTypes: DrinkType[]; // Added to expose drinkTypes directly
   setActiveNight: (night: Night | null) => void;
   addDrink: (drink: Omit<Drink, "id">) => void;
   createGroup: (name: string, members: User[]) => void;
@@ -39,6 +41,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     .filter((night) => !night.isActive)
     .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
 
+  // Get all drinks across all nights
+  const allDrinks = allNights.flatMap(night => night.drinks);
+  
   // Get user by ID
   const getUserById = (id: string): User | undefined => {
     if (id === user.id) return user;
@@ -219,6 +224,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         userGroups,
         userNotifications,
         allDrinkTypes,
+        drinks: allDrinks, // Expose all drinks
+        drinkTypes: allDrinkTypes, // Expose drinkTypes directly
         setActiveNight,
         addDrink,
         createGroup,

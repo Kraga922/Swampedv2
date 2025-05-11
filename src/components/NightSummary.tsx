@@ -28,6 +28,9 @@ const NightSummary = ({ night }: NightSummaryProps) => {
       ]
     : [];
   
+  // Get night name or use a default
+  const nightName = night.name || `Night with ${night.group.name}`;
+  
   return (
     <Card className="overflow-hidden">
       {mockPhotos.length > 0 && (
@@ -35,7 +38,7 @@ const NightSummary = ({ night }: NightSummaryProps) => {
       )}
       
       <div className="p-4">
-        <h3 className="text-lg font-medium mb-2">{night.name}</h3>
+        <h3 className="text-lg font-medium mb-2">{nightName}</h3>
         
         <div className="space-y-2 mb-4">
           <div className="flex items-center text-sm text-muted-foreground">
