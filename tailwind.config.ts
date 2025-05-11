@@ -64,18 +64,15 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				app: {
-					'blue': '#3A0CA3',
-					'purple': '#8B5CF6',
-					'red': '#D946EF',
+					'blue': '#4361EE',
+					'purple': '#7209B7',
+					'red': '#F72585',
 					'light-blue': '#4CC9F0',
-					'dark-blue': '#1A1F2C',
+					'dark-blue': '#3A0CA3',
 					'background': '#F8F9FA',
 					'card': '#FFFFFF',
-					'text': '#1A1F2C',
-					'light-text': '#8E9196',
-                    'green': '#10B981',
-                    'yellow': '#FBBF24',
-                    'orange': '#F97316',
+					'text': '#1A1A2E',
+					'light-text': '#4A4A68',
 				}
 			},
 			borderRadius: {
@@ -107,18 +104,13 @@ export default {
 				'slide-up': {
 					'0%': { transform: 'translateY(10px)', opacity: '0' },
 					'100%': { transform: 'translateY(0)', opacity: '1' }
-				},
-                'float': {
-                    '0%, 100%': { transform: 'translateY(0)' },
-                    '50%': { transform: 'translateY(-8px)' }
-                }
+				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'pulse-subtle': 'pulse-subtle 2s ease-in-out infinite',
-				'slide-up': 'slide-up 0.3s ease-out',
-                'float': 'float 6s ease-in-out infinite'
+				'slide-up': 'slide-up 0.3s ease-out'
 			}
 		}
 	},
