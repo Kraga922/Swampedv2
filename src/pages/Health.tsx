@@ -14,7 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
 const Health = () => {
-  const { user } = useAuth();
+  const { session } = useAuth();
   const { activeNight } = useApp();
   const [drinks, setDrinks] = useState<Drink[]>([]);
   const [bacReadings, setBacReadings] = useState<BACReading[]>([]);
@@ -73,14 +73,14 @@ const Health = () => {
   
   useEffect(() => {
     const fetchDrinks = async () => {
-      if (!user) return;
+      if (!session?.user?.id) return;
       
       try {
         setLoading(true);
         const { data, error } = await supabase
           .from('drinks')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('user_id', session.user.id)
           .order('timestamp', { ascending: false });
         
         if (error) throw error;
@@ -116,7 +116,7 @@ const Health = () => {
     };
     
     fetchDrinks();
-  }, [user]);
+  }, [session?.user?.id]);
   
   // Generate BAC time series data
   const generateBACTimeSeries = (userDrinks: Drink[]) => {
@@ -201,7 +201,7 @@ const Health = () => {
   const healthScore = Math.max(0, 100 - (healthInsight.lifetimeDrinks / 20));
   
   // Get active night BAC if available
-  const activeNightBAC = activeNight ? calculateBAC(activeNight.drinks, user?.id || '') : 0;
+  const activeNightBAC = activeNight && session?.user?.id ? calculateBAC(activeNight.drinks, session.user.id) : 0;
   
   return (
     <Layout title="Health Insights">
@@ -232,20 +232,22 @@ const Health = () => {
                   <div className="space-y-2">
                     <Progress 
                       value={Math.min(activeNightBAC / 0.15 * 100, 100)} 
-                      className="h-3"
-                      indicators={[
-                        { at: (0.02 / 0.15) * 100, color: "bg-blue-400" },
-                        { at: (0.05 / 0.15) * 100, color: "bg-yellow-400" },
-                        { at: (0.08 / 0.15) * 100, color: "bg-orange-500" }
-                      ]}
+                      className="h-3 bg-secondary"
                     />
                     
-                    <div className="flex justify-between text-xs">
+                    <div className="flex justify-between text-xs mt-1">
                       <span>0.00</span>
                       <span className="text-blue-400">0.02</span>
                       <span className="text-yellow-400">0.05</span>
                       <span className="text-orange-500">0.08</span>
                       <span className="text-red-500">0.15+</span>
+                    </div>
+                    
+                    <div className="h-1 w-full flex mt-1">
+                      <div className="flex-1 bg-blue-400"></div>
+                      <div className="flex-1 bg-yellow-400"></div>
+                      <div className="flex-1 bg-orange-500"></div>
+                      <div className="flex-1 bg-red-500"></div>
                     </div>
                   </div>
                 </CardContent>
