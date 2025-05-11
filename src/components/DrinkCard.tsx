@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { formatTime, getDrinkTypeById } from "@/utils/drinkUtils";
-import { Drink, User } from "@/types/models";
+import { Drink } from "@/types/models";
 import { useApp } from "@/contexts/AppContext";
 import { MapPin, User as UserIcon } from "lucide-react";
 
@@ -21,7 +21,7 @@ const DrinkCard = ({ drink, showUser = true }: DrinkCardProps) => {
   
   return (
     <div 
-      className="bg-white rounded-lg p-4 mb-3 shadow-sm border border-gray-100"
+      className="bg-card rounded-lg p-4 mb-3 shadow-sm border border-border/50"
       onClick={() => setExpanded(!expanded)}
     >
       <div className="flex justify-between items-center">
@@ -29,7 +29,7 @@ const DrinkCard = ({ drink, showUser = true }: DrinkCardProps) => {
           <div className="text-2xl">{drinkType.icon}</div>
           <div>
             <h4 className="font-medium">{drinkType.name}</h4>
-            <div className="text-xs text-gray-500 flex items-center gap-1">
+            <div className="text-xs text-muted-foreground flex items-center gap-1">
               <span>{formatTime(drink.timestamp)}</span>
               {drink.location && (
                 <>
@@ -53,8 +53,8 @@ const DrinkCard = ({ drink, showUser = true }: DrinkCardProps) => {
                 className="h-6 w-6 rounded-full"
               />
             ) : (
-              <div className="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center">
-                <UserIcon className="h-4 w-4 text-gray-500" />
+              <div className="h-6 w-6 rounded-full bg-secondary flex items-center justify-center">
+                <UserIcon className="h-4 w-4 text-muted-foreground" />
               </div>
             )}
             <span className="text-sm">{user.name}</span>
@@ -63,18 +63,18 @@ const DrinkCard = ({ drink, showUser = true }: DrinkCardProps) => {
       </div>
       
       {expanded && (
-        <div className="mt-3 pt-3 border-t text-sm">
+        <div className="mt-3 pt-3 border-t border-border/50 text-sm">
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <p className="text-gray-500">Alcohol Content</p>
+              <p className="text-muted-foreground">Alcohol Content</p>
               <p>{drinkType.alcoholContent}%</p>
             </div>
             <div>
-              <p className="text-gray-500">Standard Drinks</p>
+              <p className="text-muted-foreground">Standard Drinks</p>
               <p>{drinkType.standardDrinks}</p>
             </div>
             <div>
-              <p className="text-gray-500">Volume</p>
+              <p className="text-muted-foreground">Volume</p>
               <p>{drinkType.volume} ml</p>
             </div>
           </div>

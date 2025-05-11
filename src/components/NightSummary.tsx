@@ -1,103 +1,94 @@
 
-import { Night } from "@/types/models";
-import { formatDate, calculateDrinkCountByType, calculateUserDrinks } from "@/utils/drinkUtils";
-import { useApp } from "@/contexts/AppContext";
-import { ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { formatDate, formatTime } from "@/utils/drinkUtils";
+import { Night } from "@/types/models";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { CalendarDays, ChevronRight, MapPin, Users, Camera } from "lucide-react";
+import PhotoSlideshow from "./PhotoSlideshow";
 
 interface NightSummaryProps {
   night: Night;
-  onClick?: () => void;
 }
 
-const NightSummary = ({ night, onClick }: NightSummaryProps) => {
-  const { user, getDrinkTypeById } = useApp();
+const NightSummary = ({ night }: NightSummaryProps) => {
   const navigate = useNavigate();
   
-  const totalDrinks = night.drinks.length;
-  const userDrinks = calculateUserDrinks(night.drinks, user.id);
-  const drinkCountByType = calculateDrinkCountByType(night.drinks);
-  
-  const handleClick = () => {
-    if (onClick) {
-      onClick();
-    } else {
-      navigate(`/night/${night.id}`);
-    }
-  };
+  // Mock photo URLs (in a real app, these would come from night.photos)
+  const mockPhotos = night.id === "night-1" 
+    ? [
+        "https://images.unsplash.com/photo-1541532713592-79a0317b6b77?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8YmFyfGVufDB8fDB8fHww&auto=format&fit=crop&w=800&q=60",
+        "https://images.unsplash.com/photo-1470337458703-46ad1756a187?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fGJhcnxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=800&q=60",
+        "https://images.unsplash.com/photo-1485872299829-c673f5194813?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fGJhcnxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=800&q=60"
+      ]
+    : night.id === "night-2"
+    ? [
+        "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8YmFyfGVufDB8fDB8fHww&auto=format&fit=crop&w=800&q=60",
+        "https://images.unsplash.com/photo-1539639885136-56332d18071d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MzR8fGJhcnxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=800&q=60"
+      ]
+    : [];
   
   return (
-    <div 
-      className="bg-white rounded-lg overflow-hidden shadow-sm mb-4 border"
-      onClick={handleClick}
-    >
-      <div className="p-4">
-        <div className="flex justify-between items-center mb-2">
-          <h3 className="font-semibold">
-            {night.group.name} - {formatDate(night.startTime)}
-          </h3>
-          <ChevronRight className="h-5 w-5 text-gray-400" />
-        </div>
-        
-        <div className="flex items-center mb-3">
-          <div className="bg-app-purple text-white rounded-full h-8 w-8 flex items-center justify-center mr-2">
-            {totalDrinks}
-          </div>
-          <span className="text-sm">Total Drinks</span>
-          <div className="mx-3 h-4 border-r border-gray-200"></div>
-          <div className="bg-app-blue text-white rounded-full h-8 w-8 flex items-center justify-center mr-2">
-            {userDrinks.length}
-          </div>
-          <span className="text-sm">Your Drinks</span>
-        </div>
-        
-        <div className="flex flex-wrap gap-2">
-          {Object.entries(drinkCountByType).map(([typeId, count]) => {
-            const drinkType = getDrinkTypeById(typeId);
-            if (!drinkType) return null;
-            
-            return (
-              <div key={typeId} className="flex items-center bg-gray-100 rounded-full px-3 py-1">
-                <span className="mr-1">{drinkType.icon}</span>
-                <span className="text-sm">{count}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+    <Card className="overflow-hidden">
+      {mockPhotos.length > 0 && (
+        <PhotoSlideshow photos={mockPhotos} />
+      )}
       
-      <div className="bg-gray-50 p-3 border-t">
-        <div className="flex items-center space-x-2">
-          <div className="flex -space-x-2">
-            {night.group.members.slice(0, 3).map((member) => (
-              <div
-                key={member.id}
-                className="h-6 w-6 rounded-full bg-gray-300 border-2 border-white flex items-center justify-center overflow-hidden"
-              >
-                {member.avatar ? (
-                  <img
-                    src={member.avatar}
-                    alt={member.name}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <span className="text-xs">{member.name.charAt(0)}</span>
-                )}
-              </div>
-            ))}
-            
-            {night.group.members.length > 3 && (
-              <div className="h-6 w-6 rounded-full bg-gray-300 border-2 border-white flex items-center justify-center">
-                <span className="text-xs">+{night.group.members.length - 3}</span>
-              </div>
-            )}
+      <div className="p-4">
+        <h3 className="text-lg font-medium mb-2">{night.name}</h3>
+        
+        <div className="space-y-2 mb-4">
+          <div className="flex items-center text-sm text-muted-foreground">
+            <CalendarDays className="h-4 w-4 mr-1" />
+            <span>{formatDate(night.startTime)}</span>
+            <span className="mx-1">•</span>
+            <span>{formatTime(night.startTime)}</span>
           </div>
-          <span className="text-sm text-gray-600">
-            {night.group.members.length} {night.group.members.length === 1 ? "person" : "people"}
-          </span>
+          
+          {night.mainLocation && (
+            <div className="flex items-center text-sm text-muted-foreground">
+              <MapPin className="h-4 w-4 mr-1" />
+              <span>{night.mainLocation.name}</span>
+            </div>
+          )}
+          
+          <div className="flex items-center text-sm text-muted-foreground">
+            <Users className="h-4 w-4 mr-1" />
+            <span>{night.group.members.length} people</span>
+            <span className="mx-1">•</span>
+            <span>{night.drinks.length} drinks</span>
+          </div>
+          
+          {mockPhotos.length > 0 && (
+            <div className="flex items-center text-sm text-muted-foreground">
+              <Camera className="h-4 w-4 mr-1" />
+              <span>{mockPhotos.length} photos</span>
+            </div>
+          )}
+        </div>
+        
+        <div className="flex justify-between">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => navigate(`/night/${night.id}/gallery`)}
+            disabled={mockPhotos.length === 0}
+          >
+            View Photos
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            className="ml-2"
+            onClick={() => navigate(`/night/${night.id}`)}
+          >
+            Details
+            <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
         </div>
       </div>
-    </div>
+    </Card>
   );
 };
 
