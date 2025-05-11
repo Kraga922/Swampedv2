@@ -50,12 +50,6 @@ export interface Night {
   drinks: Drink[];
   isActive: boolean;
   settings?: NightSettings;
-  name?: string;
-  mainLocation?: {
-    name: string;
-    lat?: number;
-    lng?: number;
-  };
 }
 
 export interface NightSettings {
