@@ -11,7 +11,7 @@ import { calculateDrinkCountByType } from "@/utils/drinkUtils";
 import { Settings } from "lucide-react";
 
 const CurrentNight = () => {
-  const { activeNight, endNight, getDrinkTypeById } = useApp();
+  const { activeNight, realTimeDrinks, endNight, getDrinkTypeById } = useApp();
   const navigate = useNavigate();
   const [showSettings, setShowSettings] = useState(false);
   
@@ -39,7 +39,8 @@ const CurrentNight = () => {
     );
   }
   
-  const drinkCountByType = calculateDrinkCountByType(activeNight.drinks);
+  // Use real-time drinks instead of activeNight.drinks
+  const drinkCountByType = calculateDrinkCountByType(realTimeDrinks);
   
   return (
     <Layout 
@@ -99,7 +100,7 @@ const CurrentNight = () => {
       
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-semibold">Drinks Summary</h2>
-        <span className="text-gray-500">Total: {activeNight.drinks.length}</span>
+        <span className="text-gray-500">Total: {realTimeDrinks.length}</span>
       </div>
       
       <div className="flex flex-wrap gap-2 mb-6">
@@ -122,8 +123,8 @@ const CurrentNight = () => {
       <h2 className="font-semibold mb-3">Drink Timeline</h2>
       
       <div className="space-y-3">
-        {activeNight.drinks.length > 0 ? (
-          activeNight.drinks.map((drink) => (
+        {realTimeDrinks.length > 0 ? (
+          realTimeDrinks.map((drink) => (
             <DrinkCard key={drink.id} drink={drink} showUser={true} />
           ))
         ) : (

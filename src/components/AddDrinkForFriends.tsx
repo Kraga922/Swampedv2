@@ -9,26 +9,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/components/ui/use-toast';
 import { useLocation } from '@/hooks/useLocation';
-import { useFriends } from '@/hooks/useFriends';
 import { supabase } from '@/integrations/supabase/client';
 
 const AddDrinkForFriends = () => {
   const [open, setOpen] = useState(false);
   const [selectedDrinkType, setSelectedDrinkType] = useState('');
   const [selectedUserId, setSelectedUserId] = useState('');
-  const { activeNight, allDrinkTypes } = useApp();
+  const { allDrinkTypes, fetchRealTimeDrinks } = useApp();
   const { session } = useAuth();
-  const { friends } = useFriends();
   const { toast } = useToast();
   const { loading, error, location, getCurrentLocation } = useLocation(false);
 
   // Get current user profile
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [activeNightData, setActiveNightData] = useState<any>(null);
 
   useEffect(() => {
     if (session?.user && open) {
       getCurrentLocation();
       fetchCurrentUser();
+      fetchActiveNight();
     }
   }, [session?.user, open]);
 
@@ -49,15 +49,6 @@ const AddDrinkForFriends = () => {
     }
   };
 
-  // Get active night data
-  const [activeNightData, setActiveNightData] = useState<any>(null);
-
-  useEffect(() => {
-    if (open) {
-      fetchActiveNight();
-    }
-  }, [open]);
-
   const fetchActiveNight = async () => {
     if (!session?.user) return;
 
@@ -75,15 +66,14 @@ const AddDrinkForFriends = () => {
     }
   };
 
-  const availableUsers = [
-    ...(currentUser ? [{
-      id: currentUser.id,
-      name: currentUser.name || 'You',
-      username: currentUser.username || '',
-      avatar: currentUser.avatar
-    }] : []),
-    ...friends
-  ];
+  // For now, only current user can add drinks for themselves
+  // This will be expanded once friend relationships are properly set up
+  const availableUsers = currentUser ? [{
+    id: currentUser.id,
+    name: currentUser.name || 'You',
+    username: currentUser.username || '',
+    avatar: currentUser.avatar
+  }] : [];
 
   const handleAddDrink = async () => {
     if (!selectedDrinkType || !selectedUserId) {
@@ -140,11 +130,15 @@ const AddDrinkForFriends = () => {
         description: `Added ${drinkType?.name} for ${selectedUser?.name}${location ? ' with location' : ''}.`,
       });
       
+      // Refresh the drinks list
+      fetchRealTimeDrinks();
+      
       setOpen(false);
       setSelectedDrinkType('');
       setSelectedUserId('');
       
     } catch (error: any) {
+      console.error('Error adding drink:', error);
       toast({
         title: 'Failed to add drink',
         description: error.message,

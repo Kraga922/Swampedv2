@@ -1,7 +1,7 @@
 
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { User, Group, Night, Notification, Drink, DrinkType, NightSettings } from "../types/models";
-import { currentUser, groups, nights, notifications, drinkTypes } from "../data/mockData";
+import { drinkTypes } from "../data/mockData";
 import { calculateBAC, shouldCallUber, shouldOrderFood, shouldNotify } from "../utils/drinkUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,18 +30,60 @@ const AppContext = createContext<AppContextProps | undefined>(undefined);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const { session } = useAuth();
-  const [user, setUser] = useState<User>(currentUser);
-  const [allNights, setAllNights] = useState<Night[]>(nights);
-  const [userGroups, setUserGroups] = useState<Group[]>(groups);
-  const [userNotifications, setUserNotifications] = useState<Notification[]>(notifications);
+  
+  // Initialize with clean, empty state - no dummy data
+  const [user, setUser] = useState<User>({
+    id: '',
+    name: '',
+    username: '',
+    email: '',
+    avatar: '',
+    isAdmin: false,
+    isDesignatedDriver: false,
+    friends: []
+  });
+  
+  const [allNights, setAllNights] = useState<Night[]>([]);
+  const [userGroups, setUserGroups] = useState<Group[]>([]);
+  const [userNotifications, setUserNotifications] = useState<Notification[]>([]);
   const [allDrinkTypes, setAllDrinkTypes] = useState<DrinkType[]>(drinkTypes);
   const [realTimeDrinks, setRealTimeDrinks] = useState<Drink[]>([]);
 
-  // Fetch real-time drinks from database
+  // Initialize user data from session
+  useEffect(() => {
+    if (session?.user) {
+      setUser({
+        id: session.user.id,
+        name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || '',
+        username: session.user.user_metadata?.username || session.user.email?.split('@')[0] || '',
+        email: session.user.email || '',
+        avatar: session.user.user_metadata?.avatar || '',
+        isAdmin: false,
+        isDesignatedDriver: false,
+        friends: []
+      });
+    }
+  }, [session]);
+
+  // Fetch real-time drinks from database for current active night only
   const fetchRealTimeDrinks = async () => {
     if (!session?.user) return;
 
     try {
+      // Only fetch drinks for the current active night
+      const { data: activeNightData, error: nightError } = await supabase
+        .from('nights')
+        .select('id')
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (nightError) throw nightError;
+
+      if (!activeNightData) {
+        setRealTimeDrinks([]);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('drinks')
         .select(`
@@ -51,6 +93,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             username
           )
         `)
+        .eq('night_id', activeNightData.id)
         .order('timestamp', { ascending: false });
 
       if (error) throw error;
@@ -72,10 +115,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       setRealTimeDrinks(formattedDrinks);
     } catch (error: any) {
       console.error('Error fetching real-time drinks:', error);
+      setRealTimeDrinks([]);
     }
   };
 
-  // Listen for real-time updates to drinks
+  // Listen for real-time updates to drinks for active night only
   useEffect(() => {
     if (!session?.user) return;
 
@@ -101,10 +145,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [session?.user]);
 
-  // Get active night if there is one
+  // Get active night if there is one (should only be current session)
   const activeNight = allNights.find((night) => night.isActive) || null;
   
-  // Get past nights sorted by date
+  // Get past nights sorted by date (clean history)
   const pastNights = allNights
     .filter((night) => !night.isActive)
     .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
@@ -122,68 +166,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return allDrinkTypes.find((type) => type.id === id);
   };
 
-  // Add a new drink (legacy method for mock data compatibility)
+  // Add a new drink (for backward compatibility)
   const addDrink = (drink: Omit<Drink, "id">) => {
-    if (!activeNight) return;
-    
-    const newDrink: Drink = {
-      ...drink,
-      id: `d${activeNight.id}-${activeNight.drinks.length + 1}`,
-    };
-    
-    const updatedNight = {
-      ...activeNight,
-      drinks: [newDrink, ...activeNight.drinks],
-    };
-    
-    setAllNights((prevNights) =>
-      prevNights.map((night) =>
-        night.id === activeNight.id ? updatedNight : night
-      )
-    );
-    
-    // Check thresholds and send notifications if needed
-    const userBac = calculateBAC(updatedNight.drinks, user.id);
-    
-    if (activeNight.settings) {
-      if (shouldCallUber(userBac, activeNight.settings.uberThreshold)) {
-        addNotification({
-          type: "rideOffer",
-          title: "Time for a ride?",
-          message: "You've reached your Uber threshold. Need a ride home?",
-          receiverId: user.id,
-          nightId: activeNight.id,
-          actionUrl: "uber://",
-        });
-      }
-      
-      if (shouldOrderFood(userBac, activeNight.settings.foodThreshold)) {
-        addNotification({
-          type: "foodSuggestion",
-          title: "Hungry?",
-          message: "You've reached your food threshold. Order something to eat?",
-          receiverId: user.id,
-          nightId: activeNight.id,
-          actionUrl: "ubereats://",
-        });
-      }
-      
-      if (shouldNotify(userBac, activeNight.settings.notificationThreshold)) {
-        addNotification({
-          type: "drinkWarning",
-          title: "Drink Count Alert",
-          message: `You've had ${updatedNight.drinks.filter(d => d.userId === user.id).length} drinks tonight. Consider slowing down.`,
-          receiverId: user.id,
-          nightId: activeNight.id,
-        });
-      }
-    }
+    // This is mainly for mock data compatibility
+    // Real drinks should be added via the database
+    console.log('Adding drink via legacy method:', drink);
   };
 
   // Create a new group
   const createGroup = (name: string, members: User[]) => {
     const newGroup: Group = {
-      id: `g${userGroups.length + 1}`,
+      id: `g${Date.now()}`,
       name,
       members: [...members],
       createdAt: new Date().toISOString(),
@@ -197,6 +190,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const group = userGroups.find((g) => g.id === groupId);
     if (!group) return;
     
+    // End any existing active night
     if (activeNight) {
       endNight(activeNight.id);
     }
@@ -208,7 +202,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     };
     
     const newNight: Night = {
-      id: `n${allNights.length + 1}`,
+      id: `n${Date.now()}`,
       groupId,
       group,
       date: new Date().toISOString().split("T")[0],
@@ -220,17 +214,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     
     setAllNights((prevNights) => [newNight, ...prevNights]);
     
-    group.members.forEach((member) => {
-      if (member.id !== user.id) {
-        addNotification({
-          type: "message",
-          title: "Night Started",
-          message: `${user.name} has started a night with ${group.name}`,
-          receiverId: member.id,
-          nightId: newNight.id,
-        });
-      }
-    });
+    // Clear previous drinks when starting new night
+    setRealTimeDrinks([]);
   };
 
   const endNight = (nightId: string) => {
@@ -241,6 +226,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           : night
       )
     );
+    
+    // Clear real-time drinks when night ends
+    setRealTimeDrinks([]);
   };
 
   const markNotificationAsRead = (notificationId: string) => {
@@ -254,7 +242,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const addNotification = (notification: Omit<Notification, "id" | "timestamp" | "read">) => {
     const newNotification: Notification = {
       ...notification,
-      id: `notif${userNotifications.length + 1}`,
+      id: `notif${Date.now()}`,
       timestamp: new Date().toISOString(),
       read: false,
     };
