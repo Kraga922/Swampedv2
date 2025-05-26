@@ -32,19 +32,35 @@ export const useFriends = () => {
     if (!session?.user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('friends')
-        .select(`
-          *,
-          friend:profiles!friends_friend_id_fkey(id, name, username, avatar)
-        `)
-        .eq('user_id', session.user.id)
-        .eq('status', 'accepted');
+      // Query the friends table and get the profile data for each friend
+      const { data: friendsData, error } = await supabase
+        .rpc('get_user_friends', { user_uuid: session.user.id });
 
-      if (error) throw error;
+      if (error) {
+        // Fallback to direct query if RPC doesn't exist
+        const { data: directData, error: directError } = await supabase
+          .from('friends')
+          .select('friend_id')
+          .eq('user_id', session.user.id)
+          .eq('status', 'accepted');
 
-      const friendsList = data?.map(friendship => friendship.friend) || [];
-      setFriends(friendsList);
+        if (directError) throw directError;
+
+        if (directData && directData.length > 0) {
+          const friendIds = directData.map(f => f.friend_id);
+          const { data: profilesData, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, name, username, avatar')
+            .in('id', friendIds);
+
+          if (profilesError) throw profilesError;
+          setFriends(profilesData || []);
+        } else {
+          setFriends([]);
+        }
+      } else {
+        setFriends(friendsData || []);
+      }
     } catch (error: any) {
       console.error('Error fetching friends:', error);
       setFriends([]);
@@ -55,19 +71,44 @@ export const useFriends = () => {
     if (!session?.user) return;
 
     try {
-      const { data, error } = await supabase
+      const { data: requestsData, error } = await supabase
         .from('friend_requests')
-        .select(`
-          *,
-          sender:profiles!friend_requests_sender_id_fkey(id, name, username, avatar),
-          receiver:profiles!friend_requests_receiver_id_fkey(id, name, username, avatar)
-        `)
+        .select('id, sender_id, receiver_id, status, created_at')
         .or(`sender_id.eq.${session.user.id},receiver_id.eq.${session.user.id}`)
         .eq('status', 'pending');
 
       if (error) throw error;
 
-      setFriendRequests(data || []);
+      if (requestsData && requestsData.length > 0) {
+        // Get sender and receiver profile data
+        const userIds = [...new Set([
+          ...requestsData.map(r => r.sender_id),
+          ...requestsData.map(r => r.receiver_id)
+        ])];
+
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, name, username, avatar')
+          .in('id', userIds);
+
+        if (profilesError) throw profilesError;
+
+        const profilesMap = new Map(profilesData?.map(p => [p.id, p]) || []);
+
+        const formattedRequests: FriendRequest[] = requestsData.map(request => ({
+          id: request.id,
+          sender_id: request.sender_id,
+          receiver_id: request.receiver_id,
+          status: request.status as 'pending' | 'accepted' | 'rejected',
+          created_at: request.created_at,
+          sender: profilesMap.get(request.sender_id) || { id: request.sender_id, name: 'Unknown', username: 'unknown' },
+          receiver: profilesMap.get(request.receiver_id) || { id: request.receiver_id, name: 'Unknown', username: 'unknown' }
+        }));
+
+        setFriendRequests(formattedRequests);
+      } else {
+        setFriendRequests([]);
+      }
     } catch (error: any) {
       console.error('Error fetching friend requests:', error);
       setFriendRequests([]);

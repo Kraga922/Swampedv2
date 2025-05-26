@@ -7,6 +7,7 @@ import { Plus } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useLocation } from '@/hooks/useLocation';
 import { supabase } from '@/integrations/supabase/client';
+import { useFriends } from '@/hooks/useFriends';
 import AddDrinkDialog from './AddDrinkDialog';
 
 const AddDrinkForFriends = () => {
@@ -18,6 +19,7 @@ const AddDrinkForFriends = () => {
   
   const { allDrinkTypes, fetchRealTimeDrinks } = useApp();
   const { session } = useAuth();
+  const { friends } = useFriends();
   const { toast } = useToast();
   const { loading, error, location, getCurrentLocation } = useLocation(false);
 
@@ -63,12 +65,16 @@ const AddDrinkForFriends = () => {
     }
   };
 
-  const availableUsers = currentUser ? [{
-    id: currentUser.id,
-    name: currentUser.name || 'You',
-    username: currentUser.username || '',
-    avatar: currentUser.avatar
-  }] : [];
+  // Include current user and friends in available users
+  const availableUsers = [
+    ...(currentUser ? [{
+      id: currentUser.id,
+      name: currentUser.name || 'You',
+      username: currentUser.username || '',
+      avatar: currentUser.avatar
+    }] : []),
+    ...friends
+  ];
 
   const handleAddDrink = async () => {
     if (!selectedDrinkType || !selectedUserId) {

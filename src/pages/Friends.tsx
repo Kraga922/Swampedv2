@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { User, UserPlus, UserCheck, Search, Loader2 } from "lucide-react";
 import { useFriends } from "@/hooks/useFriends";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Friends = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -22,6 +23,7 @@ const Friends = () => {
     rejectFriendRequest,
     searchUsers 
   } = useFriends();
+  const { session } = useAuth();
   const { toast } = useToast();
 
   const handleSearch = async (query: string) => {
@@ -50,7 +52,8 @@ const Friends = () => {
     }
   };
 
-  const incomingRequests = friendRequests.filter(req => req.receiver_id !== req.sender_id);
+  // Filter incoming requests (requests where current user is receiver)
+  const incomingRequests = friendRequests.filter(req => req.receiver_id === session?.user?.id);
 
   if (loading) {
     return (
