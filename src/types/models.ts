@@ -30,6 +30,7 @@ export interface Drink {
     lng?: number;
   };
   photo?: string;
+  userName?: string; // Added to show who the drink belongs to
 }
 
 export interface Group {

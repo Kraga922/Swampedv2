@@ -1,52 +1,67 @@
 
 import { useState } from "react";
 import Layout from "@/components/Layout";
-import { useApp } from "@/contexts/AppContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, UserPlus, UserCheck, Search } from "lucide-react";
+import { User, UserPlus, UserCheck, Search, Loader2 } from "lucide-react";
+import { useFriends } from "@/hooks/useFriends";
+import { useToast } from "@/components/ui/use-toast";
 
 const Friends = () => {
-  const { user } = useApp();
   const [searchQuery, setSearchQuery] = useState("");
-  
-  // Mock data for friends and requests
-  const [friends, setFriends] = useState([
-    { id: "f1", name: "Alex Johnson", username: "alexj", avatar: null },
-    { id: "f2", name: "Sarah Williams", username: "sarahw", avatar: null },
-    { id: "f3", name: "Mike Chen", username: "mikec", avatar: null },
-  ]);
-  
-  const [friendRequests, setFriendRequests] = useState([
-    { id: "fr1", name: "Taylor Smith", username: "taylors", avatar: null },
-    { id: "fr2", name: "Jordan Lee", username: "jordanl", avatar: null },
-  ]);
-  
-  // Mock search results
-  const searchResults = !searchQuery ? [] : [
-    { id: "sr1", name: "Chris Davis", username: "chrisd", avatar: null },
-    { id: "sr2", name: "Pat Wilson", username: "patw", avatar: null },
-  ];
-  
-  const handleAcceptRequest = (id: string) => {
-    const request = friendRequests.find(req => req.id === id);
-    if (request) {
-      setFriends([...friends, request]);
-      setFriendRequests(friendRequests.filter(req => req.id !== id));
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const { 
+    friends, 
+    friendRequests, 
+    loading,
+    sendFriendRequest, 
+    acceptFriendRequest, 
+    rejectFriendRequest,
+    searchUsers 
+  } = useFriends();
+  const { toast } = useToast();
+
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setSearchLoading(true);
+    try {
+      const results = await searchUsers(query);
+      setSearchResults(results);
+    } finally {
+      setSearchLoading(false);
     }
   };
-  
-  const handleRejectRequest = (id: string) => {
-    setFriendRequests(friendRequests.filter(req => req.id !== id));
+
+  const handleSendFriendRequest = async (userId: string, userName: string) => {
+    const success = await sendFriendRequest(userId);
+    if (success) {
+      toast({
+        title: 'Friend request sent',
+        description: `Friend request sent to ${userName}`,
+      });
+    }
   };
-  
-  const handleAddFriend = (id: string) => {
-    // In a real app, this would send a friend request
-    alert(`Friend request sent to ${searchResults.find(user => user.id === id)?.name}`);
-  };
-  
+
+  const incomingRequests = friendRequests.filter(req => req.receiver_id !== req.sender_id);
+
+  if (loading) {
+    return (
+      <Layout title="Friends">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout title="Friends">
       <div className="space-y-6">
@@ -57,14 +72,18 @@ const Friends = () => {
               <Input
                 placeholder="Search for users by name or username"
                 value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
+                onChange={e => handleSearch(e.target.value)}
                 className="flex-1"
               />
             </div>
           </CardHeader>
           {searchQuery && (
             <CardContent>
-              {searchResults.length > 0 ? (
+              {searchLoading ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                </div>
+              ) : searchResults.length > 0 ? (
                 <div className="space-y-4">
                   <h3 className="text-sm font-medium text-gray-500">Search Results</h3>
                   {searchResults.map(result => (
@@ -75,17 +94,17 @@ const Friends = () => {
                             <AvatarImage src={result.avatar} alt={result.name} />
                           ) : (
                             <AvatarFallback className="bg-app-purple text-white">
-                              {result.name.charAt(0).toUpperCase()}
+                              {(result.name || result.username || '?').charAt(0).toUpperCase()}
                             </AvatarFallback>
                           )}
                         </Avatar>
                         <div className="ml-3">
-                          <p className="font-medium">{result.name}</p>
-                          <p className="text-sm text-gray-500">@{result.username}</p>
+                          <p className="font-medium">{result.name || 'Unknown'}</p>
+                          <p className="text-sm text-gray-500">@{result.username || 'unknown'}</p>
                         </div>
                       </div>
                       <Button 
-                        onClick={() => handleAddFriend(result.id)}
+                        onClick={() => handleSendFriendRequest(result.id, result.name)}
                         size="sm" 
                         className="bg-app-purple hover:bg-app-dark-blue"
                       >
@@ -102,35 +121,35 @@ const Friends = () => {
           )}
         </Card>
         
-        {friendRequests.length > 0 && (
+        {incomingRequests.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center text-lg">
                 <UserPlus className="h-5 w-5 mr-2" />
-                Friend Requests
+                Friend Requests ({incomingRequests.length})
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {friendRequests.map(request => (
+              {incomingRequests.map(request => (
                 <div key={request.id} className="flex items-center justify-between">
                   <div className="flex items-center">
                     <Avatar className="h-10 w-10">
-                      {request.avatar ? (
-                        <AvatarImage src={request.avatar} alt={request.name} />
+                      {request.sender.avatar ? (
+                        <AvatarImage src={request.sender.avatar} alt={request.sender.name} />
                       ) : (
                         <AvatarFallback className="bg-app-purple text-white">
-                          {request.name.charAt(0).toUpperCase()}
+                          {request.sender.name.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       )}
                     </Avatar>
                     <div className="ml-3">
-                      <p className="font-medium">{request.name}</p>
-                      <p className="text-sm text-gray-500">@{request.username}</p>
+                      <p className="font-medium">{request.sender.name}</p>
+                      <p className="text-sm text-gray-500">@{request.sender.username}</p>
                     </div>
                   </div>
                   <div className="flex gap-2">
                     <Button 
-                      onClick={() => handleAcceptRequest(request.id)}
+                      onClick={() => acceptFriendRequest(request.id, request.sender_id)}
                       size="sm" 
                       className="bg-app-purple hover:bg-app-dark-blue"
                     >
@@ -138,7 +157,7 @@ const Friends = () => {
                       Accept
                     </Button>
                     <Button 
-                      onClick={() => handleRejectRequest(request.id)}
+                      onClick={() => rejectFriendRequest(request.id)}
                       size="sm" 
                       variant="outline"
                     >

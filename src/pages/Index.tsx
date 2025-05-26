@@ -1,6 +1,7 @@
 
 import Layout from "@/components/Layout";
 import NightSummary from "@/components/NightSummary";
+import AddDrinkForFriends from "@/components/AddDrinkForFriends";
 import { useApp } from "@/contexts/AppContext";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -42,6 +43,8 @@ const Index = () => {
           </div>
         )}
       </div>
+      
+      <AddDrinkForFriends />
     </Layout>
   );
 };
