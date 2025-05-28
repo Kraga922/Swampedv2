@@ -10,22 +10,16 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
+import { useFriends } from "@/hooks/useFriends";
 
 const Groups = () => {
   const { userGroups, createGroup, user } = useApp();
+  const { friends } = useFriends();
   const [isAddingGroup, setIsAddingGroup] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
   const [showFriendSelector, setShowFriendSelector] = useState(false);
   const { toast } = useToast();
-  
-  // Mock friends data (in a real app, this would come from the context)
-  const [availableFriends, setAvailableFriends] = useState([
-    { id: "f1", name: "Alex Johnson", username: "alexj", avatar: null },
-    { id: "f2", name: "Sarah Williams", username: "sarahw", avatar: null },
-    { id: "f3", name: "Mike Chen", username: "mikec", avatar: null },
-    { id: "f4", name: "Taylor Lee", username: "taylorl", avatar: null },
-  ]);
   
   const handleCreateGroup = () => {
     if (!groupName) return;
@@ -35,17 +29,21 @@ const Groups = () => {
         id: user.id, 
         name: user.name, 
         username: user.username,
+        email: user.email,
         avatar: user.avatar,
         isAdmin: true,
-        isDesignatedDriver: false, 
+        isDesignatedDriver: false,
+        friends: []
       },
-      ...availableFriends.filter(friend => selectedFriends.includes(friend.id)).map(friend => ({
+      ...friends.filter(friend => selectedFriends.includes(friend.id)).map(friend => ({
         id: friend.id,
         name: friend.name,
         username: friend.username,
+        email: '',
         avatar: friend.avatar,
         isAdmin: false,
         isDesignatedDriver: false,
+        friends: []
       }))
     ];
     
@@ -146,7 +144,7 @@ const Groups = () => {
                 {selectedFriends.length > 0 && (
                   <div className="mt-2">
                     {selectedFriends.map(friendId => {
-                      const friend = availableFriends.find(f => f.id === friendId);
+                      const friend = friends.find(f => f.id === friendId);
                       if (!friend) return null;
                       
                       return (
@@ -187,8 +185,8 @@ const Groups = () => {
                   
                   {showFriendSelector && (
                     <div className="mt-2 border rounded max-h-40 overflow-y-auto">
-                      {availableFriends.filter(f => !selectedFriends.includes(f.id)).length > 0 ? (
-                        availableFriends.filter(f => !selectedFriends.includes(f.id)).map(friend => (
+                      {friends.filter(f => !selectedFriends.includes(f.id)).length > 0 ? (
+                        friends.filter(f => !selectedFriends.includes(f.id)).map(friend => (
                           <div key={friend.id} className="flex items-center p-2 hover:bg-gray-50 border-b last:border-b-0">
                             <Checkbox 
                               id={`friend-${friend.id}`} 
@@ -208,7 +206,9 @@ const Groups = () => {
                           </div>
                         ))
                       ) : (
-                        <p className="text-center py-2 text-sm text-gray-500">All friends added</p>
+                        <p className="text-center py-2 text-sm text-gray-500">
+                          {friends.length === 0 ? "No friends available. Add friends first!" : "All friends added"}
+                        </p>
                       )}
                     </div>
                   )}

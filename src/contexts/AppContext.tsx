@@ -5,6 +5,8 @@ import { drinkTypes } from "../data/mockData";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useRealTimeDrinks } from "@/hooks/useRealTimeDrinks";
 import { useSupabaseNights } from "@/hooks/useSupabaseNights";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 interface AppContextProps {
   user: User;
@@ -32,6 +34,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const user = useUserProfile();
   const { realTimeDrinks, fetchRealTimeDrinks } = useRealTimeDrinks();
   const { activeNight, pastNights, startNight, endNight } = useSupabaseNights();
+  const { toast } = useToast();
   
   const [userGroups, setUserGroups] = useState<Group[]>([]);
   const [userNotifications, setUserNotifications] = useState<Notification[]>([]);
@@ -52,16 +55,55 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     console.log('Adding drink via legacy method:', drink);
   };
 
-  const createGroup = (name: string, members: User[]) => {
-    const newGroup: Group = {
-      id: `g${Date.now()}`,
-      name,
-      members: [...members],
-      createdAt: new Date().toISOString(),
-      createdBy: user.id,
-    };
-    
-    setUserGroups((prevGroups) => [...prevGroups, newGroup]);
+  const createGroup = async (name: string, members: User[]) => {
+    try {
+      // Create group in Supabase
+      const { data: groupData, error: groupError } = await supabase
+        .from('groups')
+        .insert({
+          name,
+          created_by: user.id
+        })
+        .select()
+        .single();
+
+      if (groupError) throw groupError;
+
+      // Add group members
+      const groupMembers = members.map(member => ({
+        group_id: groupData.id,
+        user_id: member.id
+      }));
+
+      const { error: membersError } = await supabase
+        .from('group_members')
+        .insert(groupMembers);
+
+      if (membersError) throw membersError;
+
+      // Create local group object
+      const newGroup: Group = {
+        id: groupData.id,
+        name: groupData.name,
+        members: members,
+        createdAt: groupData.created_at,
+        createdBy: groupData.created_by,
+      };
+      
+      setUserGroups((prevGroups) => [...prevGroups, newGroup]);
+      
+      toast({
+        title: "Group created",
+        description: `"${name}" has been created successfully.`,
+      });
+    } catch (error: any) {
+      console.error('Error creating group:', error);
+      toast({
+        title: "Failed to create group",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const setActiveNight = (night: any) => {

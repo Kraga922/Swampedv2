@@ -3,6 +3,7 @@ import { Group } from "@/types/models";
 import { Button } from "@/components/ui/button";
 import { useApp } from "@/contexts/AppContext";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
 
 interface GroupCardProps {
   group: Group;
@@ -11,10 +12,25 @@ interface GroupCardProps {
 const GroupCard = ({ group }: GroupCardProps) => {
   const { startNight, activeNight } = useApp();
   const navigate = useNavigate();
+  const { toast } = useToast();
   
-  const handleStartNight = () => {
-    startNight(group.id);
-    navigate("/current");
+  const handleStartNight = async () => {
+    console.log('Starting night for group:', group.id);
+    const success = await startNight(group.id);
+    
+    if (success) {
+      toast({
+        title: "Night started!",
+        description: `Started a night with ${group.name}`,
+      });
+      navigate("/current");
+    } else {
+      toast({
+        title: "Failed to start night",
+        description: "Please try again",
+        variant: "destructive",
+      });
+    }
   };
   
   return (
@@ -26,7 +42,7 @@ const GroupCard = ({ group }: GroupCardProps) => {
           disabled={!!activeNight}
           className="bg-app-purple hover:bg-app-dark-blue"
         >
-          Start Night
+          {activeNight ? "Night Active" : "Start Night"}
         </Button>
       </div>
       
