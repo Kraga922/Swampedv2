@@ -34,32 +34,24 @@ export const useFriends = () => {
     try {
       // Query the friends table and get the profile data for each friend
       const { data: friendsData, error } = await supabase
-        .rpc('get_user_friends', { user_uuid: session.user.id });
+        .from('friends')
+        .select('friend_id')
+        .eq('user_id', session.user.id)
+        .eq('status', 'accepted');
 
-      if (error) {
-        // Fallback to direct query if RPC doesn't exist
-        const { data: directData, error: directError } = await supabase
-          .from('friends')
-          .select('friend_id')
-          .eq('user_id', session.user.id)
-          .eq('status', 'accepted');
+      if (error) throw error;
 
-        if (directError) throw directError;
+      if (friendsData && friendsData.length > 0) {
+        const friendIds = friendsData.map(f => f.friend_id);
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, name, username, avatar')
+          .in('id', friendIds);
 
-        if (directData && directData.length > 0) {
-          const friendIds = directData.map(f => f.friend_id);
-          const { data: profilesData, error: profilesError } = await supabase
-            .from('profiles')
-            .select('id, name, username, avatar')
-            .in('id', friendIds);
-
-          if (profilesError) throw profilesError;
-          setFriends(profilesData || []);
-        } else {
-          setFriends([]);
-        }
+        if (profilesError) throw profilesError;
+        setFriends(profilesData || []);
       } else {
-        setFriends(friendsData || []);
+        setFriends([]);
       }
     } catch (error: any) {
       console.error('Error fetching friends:', error);

@@ -29,7 +29,7 @@ export const useRealTimeDrinks = () => {
         .from('drinks')
         .select(`
           *,
-          profiles!drinks_user_id_fkey (
+          profiles (
             name,
             username
           )
@@ -50,7 +50,7 @@ export const useRealTimeDrinks = () => {
           lng: drink.location_lng
         } : undefined,
         photo: drink.photo,
-        userName: drink.profiles?.name || 'Unknown User'
+        userName: (drink.profiles as any)?.name || 'Unknown User'
       })) || [];
 
       setRealTimeDrinks(formattedDrinks);
