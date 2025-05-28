@@ -20,10 +20,10 @@ export const useUserProfile = () => {
     if (session?.user) {
       setUser({
         id: session.user.id,
-        name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || '',
-        username: session.user.user_metadata?.username || session.user.email?.split('@')[0] || '',
+        name: session.user.user_meta_data?.name || session.user.email?.split('@')[0] || '',
+        username: session.user.user_meta_data?.username || session.user.email?.split('@')[0] || '',
         email: session.user.email || '',
-        avatar: session.user.user_metadata?.avatar || '',
+        avatar: session.user.user_meta_data?.avatar || '',
         isAdmin: false,
         isDesignatedDriver: false,
         friends: []

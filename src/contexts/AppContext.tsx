@@ -4,7 +4,7 @@ import { User, Group, Notification, DrinkType } from "../types/models";
 import { drinkTypes } from "../data/mockData";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useRealTimeDrinks } from "@/hooks/useRealTimeDrinks";
-import { useNightManagement } from "@/hooks/useNightManagement";
+import { useSupabaseNights } from "@/hooks/useSupabaseNights";
 
 interface AppContextProps {
   user: User;
@@ -17,7 +17,7 @@ interface AppContextProps {
   setActiveNight: (night: any) => void;
   addDrink: (drink: any) => void;
   createGroup: (name: string, members: User[]) => void;
-  startNight: (groupId: string, settings?: any) => void;
+  startNight: (groupId: string, settings?: any) => Promise<boolean>;
   endNight: (nightId: string) => void;
   markNotificationAsRead: (notificationId: string) => void;
   addNotification: (notification: any) => void;
@@ -31,7 +31,7 @@ const AppContext = createContext<AppContextProps | undefined>(undefined);
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const user = useUserProfile();
   const { realTimeDrinks, fetchRealTimeDrinks } = useRealTimeDrinks();
-  const { activeNight, pastNights, setActiveNight, startNight, endNight } = useNightManagement();
+  const { activeNight, pastNights, startNight, endNight } = useSupabaseNights();
   
   const [userGroups, setUserGroups] = useState<Group[]>([]);
   const [userNotifications, setUserNotifications] = useState<Notification[]>([]);
@@ -62,6 +62,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     };
     
     setUserGroups((prevGroups) => [...prevGroups, newGroup]);
+  };
+
+  const setActiveNight = (night: any) => {
+    // This is now handled by useSupabaseNights
+    console.log('setActiveNight called with:', night);
   };
 
   const markNotificationAsRead = (notificationId: string) => {

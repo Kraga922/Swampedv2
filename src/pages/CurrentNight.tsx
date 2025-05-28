@@ -39,6 +39,18 @@ const CurrentNight = () => {
     );
   }
   
+  // Add null check for activeNight.group
+  if (!activeNight.group) {
+    return (
+      <Layout title="Current Night">
+        <div className="text-center py-12">
+          <h3 className="text-xl font-medium mb-2">Loading Night Data...</h3>
+          <p className="text-gray-500">Please wait while we load your night information</p>
+        </div>
+      </Layout>
+    );
+  }
+  
   // Use real-time drinks instead of activeNight.drinks
   const drinkCountByType = calculateDrinkCountByType(realTimeDrinks);
   
@@ -93,9 +105,13 @@ const CurrentNight = () => {
       <h2 className="font-semibold mb-3">Group Members</h2>
       
       <div className="space-y-3 mb-6">
-        {activeNight.group.members.map((member) => (
+        {activeNight.group.members?.map((member) => (
           <UserBacCard key={member.id} user={member} />
-        ))}
+        )) || (
+          <div className="text-center py-4 text-gray-500">
+            No group members found
+          </div>
+        )}
       </div>
       
       <div className="flex items-center justify-between mb-4">
